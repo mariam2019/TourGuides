@@ -6,14 +6,15 @@
             <div >
             <a class="navbar-brand logo" href="#">LOGO</a>
             </div>
-            <div class=" pull-right" style="text-align:right" v-if="!loggedin">
-                <router-link to="/login">Login</router-link>
-            </div>
+           
             <div class="row">
                 <div class="col-sm-4"> <button class="tabs activeT" > Production Employee  <br>  &nbsp; </button></div>
                 <div class="col-sm-4"><button class="tabs" >Ahmed Yasser <br> Operation </button></div>
                 <div class="col-sm-4"><button class="tabs" > Mohamed Yasser <br> Manager</button></div>
                  
+            </div>
+             <div class=" pull-right" style="text-align:right; padding-right:3%" v-if="!loggedin">
+                <router-link to="/login">Login</router-link>
             </div>
              <div class=" pull-right" style="text-align:right" v-if="loggedin">
                  
@@ -194,7 +195,7 @@
         </div>
        <br v-if="adding" />
             <div class="row" v-if="tourGuides.length && loaded" >
-                    <table class="table table-bordered ">
+                    <table class="table table-bordered " style="border:#eaeaea">
                     <thead>
                     <tr>
                         <th>Name <font-awesome-icon icon="caret-down" class="clickable" v-if="sortAsc" v-on:click="sort(1)"/>
@@ -209,16 +210,48 @@
                     </thead>
                     <tbody>
                         <!-- eslint-disable -->
-                    <tr v-for="(guide,index) in tourGuides" v-bind:key="guide.ID" v-if="!filtered[index]">
-                        <td>{{guide.name}}</td>
-                        <td>{{guide.number}}</td>
-                        <td>{{guide.city}}</td>
-                        <td>{{guide.fees}}</td>
-                        <td>
+                    <tr v-for="(guide,index) in tourGuides" v-bind:key="guide.ID" v-if="!filtered[index]" v-bind:class="{greyR:updating[index]}">
+                        <td v-if="!updating[index]">{{guide.name}}</td>
+                        <td v-if="updating[index]">
+                            <input v-model="tourGuidesUp[index].name" type="text"  name="name"  class="form-control"/>
+                            <br>
+                            <label>License Number</label><br>
+                            <input v-model="tourGuidesUp[index].license_num" type="text"  name="licenesenum"  class="form-control"/>
+                        </td>
+                         
+                        <td v-if="!updating[index]">{{guide.number}}</td>
+                        <td v-if="updating[index]">
+                            <input v-model="tourGuidesUp[index].number" type="text"  name="number"  class="form-control"/>
+                            <br>
+                            <label>Nationality</label><br>
+                            <input v-model="tourGuidesUp[index].nationality" type="text"  name="nationality"  class="form-control"/>
+                        </td>
+
+                        <td v-if="!updating[index]">{{guide.city}}</td>
+                        <td v-if="updating[index]">
                             
-                            <span class="lang" v-for="lang in guide.languages" v-bind:key="lang">
-                                {{lang}}</span></td>
-                        <td v-if="loggedin">
+                             <multiselect  v-model="tourGuidesUp[index].city" :options="cities"  label="name" track-by="name">
+                                    </multiselect>
+                            <br>
+                            <label>National ID</label><br>
+                            <input v-model="tourGuidesUp[index].nationalid" type="text"  name="nationalid"  class="form-control"/>
+                        </td>
+
+                        <td v-if="!updating[index]">{{guide.fees}}</td>
+                        <td v-if="updating[index]">
+                            <input v-model="tourGuidesUp[index].fees" type="number"  name="fees"  class="form-control"/>
+                            <br>
+                            <label>Passport Number</label><br>
+                            <input v-model="tourGuidesUp[index].passport_num" type="text"  name="passportnum"  class="form-control"/>
+                        </td>
+
+                        <td v-if="!updating[index]" ><span class="lang" v-for="lang in guide.languages" v-bind:key="lang"> {{lang}}</span></td>
+                        <td v-if="updating[index]">
+                            <multiselect  v-model="tourGuidesUp[index].languages" :options="languages" :multiple="true" :close-on-select="false" :clear-on-select="false" :preserve-search="true"  label="name" track-by="name" :preselect-first="false">
+                            </multiselect>
+                        </td>
+
+                        <td v-if="loggedin && !updating[index]">
                             <div class="row">
                             <div class="col-sm-8"><a href="#" class="anc">Archive</a></div>
                             <div class="col-sm-4">
@@ -227,14 +260,23 @@
                                     <font-awesome-icon icon="ellipsis-v" class="clickable"/>
                                      </a>
                                     <ul class = "dropdown-menu" role = "menu">
-                                    <li v-on:click="setData(index)" data-toggle="modal" data-target="#myModal" > &nbsp;&nbsp; <a href="#"><font-awesome-icon icon="pen" /> Update</a></li>
+                                    <li v-on:click="toggleUpdating(index)" > &nbsp;&nbsp; <a href="#"><font-awesome-icon icon="pen" /> Update</a></li>
                                     <li v-on:click="erase(guide.ID,index)">&nbsp;&nbsp;<a href="#"><font-awesome-icon icon="trash" /> &nbsp;Delete</a></li>
                                     </ul>
                                 </div>
                             </div>
                             </div>
                         </td>
+                         <td v-if="updating[index]">
+                              <a href="#" v-on:click="update(index)" class="underline" style="color:green"> Update </a>
+                              <a  href="#" v-on:click="toggleUpdating(index)" class="underline" style="color:black"> Cancel </a>  
+                         </td>
+
                     </tr>
+
+                    
+                        
+                   
                     <!-- eslint-enable -->
                     
                     </tbody>
@@ -306,7 +348,7 @@
 
                     <div class="row" >    
                                 <div class="col-sm-6" >
-                                <button type="button" class="btn btn-primary create" data-dismiss="modal" v-on:click="update()" >Update</button>
+                                <button type="button" class="btn btn-primary create" data-dismiss="modal" v-on:click="update(index)" >Update</button>
                                 </div>
                                 <div class="col-sm-6" >
                                 <button type="button" class="btn btn-default cancel" data-dismiss="modal">Close</button>
@@ -358,7 +400,7 @@ import router from '../routes.js';
              return {
                  loggedin:false, sortAsc:true,sortDesc:false,
           visible:[false,false,true,false,false,false,false],
-          filtered:[],
+          filtered:[],updating:[],
           name:"",number:"",fees:"",nationality:"",nationalid:"",passportnum:"",licensenum:"",
           adding:false,filtering:false,
           city:"",cityF:"",
@@ -378,7 +420,7 @@ import router from '../routes.js';
        ,{name:'Swahili'},{name:'Swedish'},{name:'Tamil'},{name:'Tatar'},{name:'Telugu'},{name:'Thai'},{name:'Tibetan'},{name:'Tonga'},{name:'Turkish'}
        ,{name:'Ukrainian'},{name:'Urdu'},{name:'Uzbek'},{name:'Vietnamese'},{name:'Welsh'},{name:'Xhosa'}
       ]
-      ,tourGuides:[],
+      ,tourGuides:[],tourGuidesUp:[],
       id:-1
       ,loaded:false
              }
@@ -435,9 +477,13 @@ import router from '../routes.js';
                         })
                         if(response.data.id!==undefined)
                         {
-                        self.tourGuides.push({name:self.name,number:self.number,fees:self.fees,languages:languageN,city:self.city.name,ID:response.data.id
-                        ,passport_num:self.passportnum,license_num:self.licensenum,nationality:self.nationality,nationalid:self.nationalid})
+                            var oobj={name:self.name,number:self.number,fees:self.fees,languages:languageN,city:self.city.name,ID:response.data.id
+                        ,passport_num:self.passportnum,license_num:self.licensenum,nationality:self.nationality,nationalid:self.nationalid};
+                        
+                        self.tourGuides.push(oobj);
+                        self.tourGuidesUp.push(JSON.parse(JSON.stringify(oobj)));
 
+                            self.updating.push(false);
                             if(!self.filtering)
                             self.filtered.push(false);
                             else{
@@ -484,25 +530,37 @@ import router from '../routes.js';
                 
             }
             ,
-            update()
+            update(index)
             {
-                
+             
                 var self=this;
-                if (this.city!=null && this.language!=null&&this.name!="" && this.number!="" && this.city!="" && this.fees!="" && this.fees>=0 && this.nationality!="" && this.nationalid!=""&&
-                this.passportnum!="" && this.licensenum!="" && this.language.length!=0)
+                if (this.tourGuidesUp[index].city!=null && this.tourGuidesUp[index].languages!=null&&this.tourGuidesUp[index].name!="" && this.tourGuidesUp[index].number!="" 
+                && this.tourGuidesUp[index].city!="" && this.tourGuidesUp[index].fees!="" && this.tourGuidesUp[index].fees>=0 && this.tourGuidesUp[index].nationality!="" 
+                && this.tourGuidesUp[index].nationalid!=""&& this.tourGuidesUp[index].passport_num!="" && this.tourGuidesUp[index].license_num!="" && this.tourGuidesUp[index].languages.length!=0)
                 {
                 
                     var languageN=[]
-                    this.language.forEach(language => {
+                    if(typeof this.tourGuidesUp[index].languages[0]!="string" )
+                    {
+                    this.tourGuidesUp[index].languages.forEach(language => {
                        
                         languageN.push(language['name'])
                        
                     });
+                    }
+                    else  languageN=this.tourGuidesUp[index].languages;
+                    var city="";
+                    if(typeof this.tourGuidesUp[index].city!="string" )
+                    city=this.tourGuidesUp[index].city.name
+                    else city=this.tourGuidesUp[index].city;
 
+                    var body={name:self.tourGuidesUp[index].name,number:self.tourGuidesUp[index].number,fees:self.tourGuidesUp[index].fees,
+                    nationality:self.tourGuidesUp[index].nationality,nationalid:self.tourGuidesUp[index].nationalid,
+                    passportnum:self.tourGuidesUp[index].passport_num,licensenum:self.tourGuidesUp[index].license_num,
+                    languages:languageN,city:city,ID:self.tourGuides[index].ID};
                    
-                    axios.put('http://localhost:4100/updateTourGuide/'+self.id.toString(), 
-                    {name:self.name,number:self.number,fees:self.fees,nationality:self.nationality,nationalid:self.nationalid,
-                    passportnum:self.passportnum,licensenum:self.licensenum,languages:languageN,city:self.city.name},
+                    axios.put('http://localhost:4100/updateTourGuide/'+self.tourGuides[index].ID.toString(), 
+                    body,
                      {headers: {"x-access-token": localStorage.getItem("token")}})
                 .then(function (response) {
                     if(response.status==200)
@@ -513,19 +571,11 @@ import router from '../routes.js';
                         closeOnClick:true,
                         type:'success'
                         })
-                        var index=-1;
-                         self.tourGuides.find((o, i) => {
-                            if (o.ID === self.id) {
-                               
 
-                                var myobj = {name:self.name,number:self.number,fees:self.fees,nationality:self.nationality,nationalid:self.nationalid,
-                    passport_num:self.passportnum,license_num:self.licensenum,languages:languageN,city:self.city.name,ID:self.id} ;
-                                Vue.set(self.tourGuides, i, myobj);
-                                index=i;
-                                return true; // stop searching
-                            }
-                        });
-
+                       var myobj =body ;
+                        Vue.set(self.tourGuides, index, myobj);
+                        Vue.set(self.tourGuides, index, JSON.parse(JSON.stringify(myobj)));
+   
                         if(!self.filtering)
                             self.filtered[index]=(false);
                             else{
@@ -535,11 +585,11 @@ import router from '../routes.js';
                                 });
                                
                                 
-                                if( (self.city.name!=""&&self.city.name!=self.cityF.name) || !(langs.every(r=> languageN.includes(r))))
+                                if( (city!=""&&city!=self.cityF.name) || !(langs.every(r=> languageN.includes(r))))
                                     self.filtered[index]=(true);
                                 else self.filtered[index]=(false);
                             }
-                        
+                        self.updating[index]=false;
                    }
                    else if (response.status==401)
                    self.returnLogin();
@@ -570,7 +620,9 @@ import router from '../routes.js';
                     });*/
                     
                     self.tourGuides.splice(index, 1); 
+                    self.tourGuidesUp.splice(index, 1); 
                     self.filtered.splice(index,1);
+                    self.updating.splice(index,1);
                    } 
                    else if (response.status==401)
                    self.returnLogin();
@@ -608,6 +660,28 @@ import router from '../routes.js';
             {
                 if (order==1){this.sortAsc=false; this.sortDesc=true;}
                 else {this.sortDesc=false; this.sortAsc=true;}
+            },
+            toggleUpdating(index)
+            {
+                 
+                if(!this.updating[index] && typeof this.tourGuidesUp[index].languages[0]== "string")
+                {
+                    var langs=[];
+                this.tourGuidesUp[index].languages.forEach(element => {
+                    langs.push({'name':element})
+                });
+
+                this.tourGuidesUp[index].languages=langs;
+               
+                }
+
+                if(!this.updating[index] && typeof this.tourGuidesUp[index].city== "string")
+                    this.tourGuidesUp[index].city={'name':this.tourGuidesUp[index].city}
+
+                
+               
+                Vue.set(this.updating, index, !this.updating[index]);
+
             }
             
         },
@@ -625,7 +699,11 @@ import router from '../routes.js';
                     {
                     self.loaded=true;
                    self.tourGuides=response.data;
+                   self.tourGuidesUp=JSON.parse(JSON.stringify(response.data));
+                   
+                   
                    self.filtered=Array(self.tourGuides.length).fill(false)
+                   self.updating=Array(self.tourGuides.length).fill(false)
                     }
                     else if (response.status==401)
                    self.returnLogin();
@@ -890,5 +968,9 @@ border: 0.4000000059604645px solid #707070;
     margin-left:2px; 
    
 }
-
+.greyR
+{
+    background-color:#eaeaea;
+}
+.underline { text-decoration: underline; font-family: "Helvetica";}
 </style>
