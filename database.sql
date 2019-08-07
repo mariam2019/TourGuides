@@ -20,7 +20,7 @@ SET default_tablespace = '';
 
 SET default_with_oids = false;
 
-
+-- Create user used by nodejs to access database
 CREATE USER admin WITH PASSWORD 'password';
 
 CREATE DATABASE "myDB" OWNER=admin;
